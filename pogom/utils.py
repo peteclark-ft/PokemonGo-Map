@@ -21,7 +21,7 @@ from . import config
 log = logging.getLogger(__name__)
 
 super_rare_pokemon = ['vulpix', 'ninetales', 'ditto', 'articuno', 'zapdos', 'moltres', 'mewtwo', 'venosaur', 'charizard', 'blastoise', 'clefable', 'tauros', 'omastar', 'dragonite', 'aerodactyl', 'gyarados', 'lapras', 'vaporeon', 'jolteon', 'flareon', 'dragonair', 'kabutops', 'raichu', 'growlithe', 'arcanine', 'ponyta', 'electabuzz', 'rapidash', 'snorlax', 'mr mime', 'machamp']
-exclude_pokemon = ['oddish', 'psyduck', 'rattata', 'spearow', 'pidgey', 'pidgeotto', 'zubat', 'drowzee', 'krabby', 'poliwag', 'staryu', 'goldeen', 'magikarp', 'slowbro', 'slowpoke', 'shellder', 'paras']
+exclude_pokemon = ['raticate', 'pidgeot', 'venonat', 'caterpie', 'weedle', 'kakuna', 'metapod', 'oddish', 'psyduck', 'rattata', 'spearow', 'pidgey', 'pidgeotto', 'zubat', 'drowzee', 'krabby', 'poliwag', 'staryu', 'goldeen', 'magikarp', 'slowbro', 'slowpoke', 'shellder', 'paras']
 seen_pokemon = deque([])
 
 def parse_unicode(bytestring):
