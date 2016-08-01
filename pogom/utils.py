@@ -8,14 +8,21 @@ import uuid
 import os
 import json
 from datetime import datetime, timedelta
+from dateutil import relativedelta
+
 import logging
 import shutil
 import requests
+
+from collections import deque
 
 from . import config
 
 log = logging.getLogger(__name__)
 
+super_rare_pokemon = ['vulpix', 'ninetales', 'ditto', 'articuno', 'zapdos', 'moltres', 'mewtwo', 'venosaur', 'charizard', 'blastoise', 'clefable', 'tauros', 'omastar', 'dragonite', 'aerodactyl', 'gyarados', 'lapras', 'vaporeon', 'jolteon', 'flareon', 'dragonair', 'kabutops', 'raichu', 'growlithe', 'arcanine', 'ponyta', 'electabuzz', 'rapidash', 'snorlax', 'mr mime', 'machamp']
+exclude_pokemon = ['oddish', 'psyduck', 'rattata', 'spearow', 'pidgey', 'pidgeotto', 'zubat', 'drowzee', 'krabby', 'poliwag', 'staryu', 'goldeen', 'magikarp', 'slowbro', 'slowpoke', 'shellder', 'paras']
+seen_pokemon = deque([])
 
 def parse_unicode(bytestring):
     decoded_string = bytestring.decode(sys.getfilesystemencoding())
@@ -94,6 +101,8 @@ def get_args():
     parser.add_argument('-nk', '--no-pokestops',
                         help='Disables PokeStops from the map (including parsing them into local db)',
                         action='store_true', default=False)
+
+    parser.add_argument('--slack', help='Slack webhook to alert', required=True)
     parser.add_argument('--db-type', help='Type of database to be used (default: sqlite)',
                         default='sqlite')
     parser.add_argument('--db-name', help='Name of the database to be used')
@@ -193,6 +202,8 @@ def get_pokemon_name(pokemon_id):
 def send_to_webhook(message_type, message):
     args = get_args()
 
+    check_rarity(message)
+
     data = {
         'type': message_type,
         'message': message
@@ -208,3 +219,26 @@ def send_to_webhook(message_type, message):
                 log.debug('Could not receive response from webhook')
             except requests.exceptions.RequestException as e:
                 log.debug(e)
+
+def check_rarity(pokemon):
+    log.info(pokemon);
+    poke_name = get_pokemon_name(pokemon['pokemon_id'])
+
+    if poke_name.lower() in exclude_pokemon or pokemon['encounter_id'] in seen_pokemon:
+        return
+
+    now = datetime.utcnow()
+    disappears = datetime.fromtimestamp(pokemon['disappear_time'])
+    if disappears < now:
+        return
+
+    time_left = relativedelta.relativedelta(disappears, now);
+    seen_pokemon.append(pokemon['encounter_id'])
+
+    if len(seen_pokemon) > 100:
+        seen_pokemon.popleft()
+
+    if poke_name.lower() in super_rare_pokemon:
+        requests.post(url=get_args().slack, data='{"username":"'+poke_name+'", "icon_url":"http://pokeapi.co/media/sprites/pokemon/'+str(pokemon['pokemon_id'])+'.png", "text": "@here: <https://maps.googleapis.com/maps/api/staticmap?zoom=16&size=600x280&center='+str(pokemon['latitude'])+','+str(pokemon['longitude'])+'&markers=color:red%7C'+str(pokemon['latitude'])+','+str(pokemon['longitude'])+'|Time left '+ str(time_left.minutes) +'mins '+str(time_left.seconds)+'s.>"}')
+    else:
+        requests.post(url=get_args().slack, data='{"username":"'+poke_name+'", "icon_url":"http://pokeapi.co/media/sprites/pokemon/'+str(pokemon['pokemon_id'])+'.png", "text": "<https://maps.googleapis.com/maps/api/staticmap?zoom=16&size=600x280&center='+str(pokemon['latitude'])+','+str(pokemon['longitude'])+'&markers=color:red%7C'+str(pokemon['latitude'])+','+str(pokemon['longitude'])+'|Time left '+ str(time_left.minutes) +'mins '+str(time_left.seconds)+'s.>"}')
