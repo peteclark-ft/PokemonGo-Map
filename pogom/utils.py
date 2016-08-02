@@ -224,7 +224,7 @@ def check_rarity(pokemon):
     log.info(pokemon);
     poke_name = get_pokemon_name(pokemon['pokemon_id'])
 
-    if poke_name.lower() in exclude_pokemon or pokemon['encounter_id'] in seen_pokemon:
+    if not poke_name.lower() in super_rare_pokemon or pokemon['encounter_id'] in seen_pokemon:
         return
 
     now = datetime.utcnow()
@@ -239,6 +239,6 @@ def check_rarity(pokemon):
         seen_pokemon.popleft()
 
     if poke_name.lower() in super_rare_pokemon:
-        requests.post(url=get_args().slack, data='{"username":"'+poke_name+'", "icon_url":"http://pokeapi.co/media/sprites/pokemon/'+str(pokemon['pokemon_id'])+'.png", "text": "@here: <https://maps.googleapis.com/maps/api/staticmap?zoom=16&size=600x280&center='+str(pokemon['latitude'])+','+str(pokemon['longitude'])+'&markers=color:red%7C'+str(pokemon['latitude'])+','+str(pokemon['longitude'])+'|Time left '+ str(time_left.minutes) +'mins '+str(time_left.seconds)+'s.>"}')
+        requests.post(url=get_args().slack, data='{"username":"'+poke_name+'", "icon_url":"http://pokeapi.co/media/sprites/pokemon/'+str(pokemon['pokemon_id'])+'.png", "text": "<!channel> <https://maps.googleapis.com/maps/api/staticmap?zoom=16&size=600x280&center='+str(pokemon['latitude'])+','+str(pokemon['longitude'])+'&markers=color:red%7C'+str(pokemon['latitude'])+','+str(pokemon['longitude'])+'|Time left '+ str(time_left.minutes) +'mins '+str(time_left.seconds)+'s.>"}')
     else:
         requests.post(url=get_args().slack, data='{"username":"'+poke_name+'", "icon_url":"http://pokeapi.co/media/sprites/pokemon/'+str(pokemon['pokemon_id'])+'.png", "text": "<https://maps.googleapis.com/maps/api/staticmap?zoom=16&size=600x280&center='+str(pokemon['latitude'])+','+str(pokemon['longitude'])+'&markers=color:red%7C'+str(pokemon['latitude'])+','+str(pokemon['longitude'])+'|Time left '+ str(time_left.minutes) +'mins '+str(time_left.seconds)+'s.>"}')
